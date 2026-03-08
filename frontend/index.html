@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PhishGuard AI - Advanced phishing URL detection powered by machine learning.">
+    <title>PhishGuard | AI Phishing Detection</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-shield-alt"></i>
+            <span>PHISHGUARD AI</span>
+        </div>
+
+        <div class="nav-item active" data-target="scanner-view">
+            <i class="fas fa-crosshairs"></i>
+            <span>Scanner</span>
+        </div>
+        <div class="nav-item" data-target="history-view">
+            <i class="fas fa-clock-rotate-left"></i>
+            <span>History</span>
+        </div>
+        <div class="nav-item" data-target="intelligence-view">
+            <i class="fas fa-chart-line"></i>
+            <span>Intelligence</span>
+        </div>
+        <div class="nav-item" data-target="settings-view">
+            <i class="fas fa-sliders"></i>
+            <span>Settings</span>
+        </div>
+
+        <div class="sidebar-footer">
+            <p>Powered by <span class="brand-name">SecurityScience</span></p>
+            <p>v1.1.0</p>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <header>
+            <h1 id="pageTitle">Security Dashboard</h1>
+            <p class="subtitle">AI-powered phishing detection for a safer web experience.</p>
+        </header>
+
+        <!-- SCANNER VIEW -->
+        <div id="scanner-view" class="view-section">
+            <div class="card scanner-card">
+                <div class="card-title">
+                    <i class="fas fa-bolt"></i>
+                    Live URL Analysis
+                </div>
+
+                <div class="scan-input-row">
+                    <input type="text" id="urlInput" placeholder="Enter URL to scan...">
+                    <button id="scanBtn">
+                        <i class="fas fa-magnifying-glass"></i> <span class="btn-text">Scan</span>
+                    </button>
+                </div>
+
+                <div class="ai-disclaimer">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <span><strong>Disclaimer:</strong> AI-based detection may produce incorrect results. Always verify
+                        suspicious URLs through additional sources.</span>
+                </div>
+
+                <!-- Error display -->
+                <div id="errorBox" class="error-box" style="display: none;"></div>
+
+                <!-- Website Existence Status -->
+                <div id="existenceCard" class="existence-card" style="display: none;">
+                    <div class="existence-header">
+                        <div class="existence-icon" id="existenceIcon">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <div class="existence-info">
+                            <div class="existence-title" id="existenceTitle">Checking website...</div>
+                            <div class="existence-subtitle" id="existenceSubtitle"></div>
+                        </div>
+                        <div class="existence-badge" id="existenceBadge">CHECKING</div>
+                    </div>
+                    <div class="existence-details" id="existenceDetails">
+                        <div class="existence-detail-item">
+                            <span class="detail-label"><i class="fas fa-server"></i> DNS Resolution</span>
+                            <span class="detail-value" id="existDNS">—</span>
+                        </div>
+                        <div class="existence-detail-item">
+                            <span class="detail-label"><i class="fas fa-plug"></i> HTTP Reachable</span>
+                            <span class="detail-value" id="existHTTP">—</span>
+                        </div>
+                        <div class="existence-detail-item">
+                            <span class="detail-label"><i class="fas fa-code"></i> Status Code</span>
+                            <span class="detail-value" id="existStatus">—</span>
+                        </div>
+                        <div class="existence-detail-item">
+                            <span class="detail-label"><i class="fas fa-clock"></i> Response Time</span>
+                            <span class="detail-value" id="existTime">—</span>
+                        </div>
+                        <div class="existence-detail-item">
+                            <span class="detail-label"><i class="fas fa-map-pin"></i> IP Address</span>
+                            <span class="detail-value" id="existIP">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Result: Compact summary -->
+                <div id="resultBox" class="result-box">
+                    <div class="result-summary">
+                        <div class="result-left">
+                            <div class="badges-row">
+                                <div id="statusBadge" class="status-badge">LEGITIMATE</div>
+                                <div id="whitelistBadge" class="status-badge status-whitelisted" style="display: none;">
+                                    <i class="fas fa-check-circle"></i> WHITELISTED
+                                </div>
+                            </div>
+                            <div class="scanned-url" id="scannedUrl"></div>
+                        </div>
+                        <div class="result-right">
+                            <div class="confidence-ring" id="confidenceRing">
+                                <svg viewBox="0 0 80 80">
+                                    <circle class="ring-bg" cx="40" cy="40" r="34" />
+                                    <circle class="ring-fill" id="ringFill" cx="40" cy="40" r="34" />
+                                </svg>
+                                <div class="ring-text" id="ringText">0%</div>
+                            </div>
+                            <span class="confidence-label">Confidence</span>
+                        </div>
+                    </div>
+
+                    <button class="details-btn" id="detailsBtn">
+                        <i class="fas fa-microscope"></i> View Detailed Analysis
+                        <i class="fas fa-chevron-down details-chevron" id="detailsChevron"></i>
+                    </button>
+
+                    <!-- Expandable detail section -->
+                    <div id="featurePanel" class="feature-panel">
+                        <p class="feature-panel-title">
+                            <i class="fas fa-list-check"></i> Full Feature Breakdown
+                        </p>
+                        <div id="featureList" class="feature-grid"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECURITY ANALYSIS PANEL -->
+            <div id="securityAnalysis" class="security-analysis card" style="display: none;">
+                <div class="card-title">
+                    <i class="fas fa-shield-halved"></i>
+                    Security Analysis
+                </div>
+                <div class="security-panel">
+                    <!-- SSL Certificate Status -->
+                    <div class="ssl-status-card">
+                        <div class="ssl-header">
+                            <div class="ssl-icon" id="sslIcon">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <div>
+                                <div class="ssl-title" id="sslTitle">SSL Certificate</div>
+                                <div class="ssl-subtitle" id="sslSubtitle">Checking...</div>
+                            </div>
+                        </div>
+                        <ul class="ssl-details-list">
+                            <li>
+                                <span class="detail-label"><i class="fas fa-building"></i> Issuer</span>
+                                <span class="detail-value" id="sslIssuer">—</span>
+                            </li>
+                            <li>
+                                <span class="detail-label"><i class="fas fa-calendar"></i> Expires In</span>
+                                <span class="detail-value" id="sslExpiry">—</span>
+                            </li>
+                            <li>
+                                <span class="detail-label"><i class="fas fa-globe"></i> Domain Match</span>
+                                <span class="detail-value" id="sslDomainMatch">—</span>
+                            </li>
+                            <li>
+                                <span class="detail-label"><i class="fas fa-network-wired"></i> TLS Version</span>
+                                <span class="detail-value" id="sslTLS">—</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Security Headers -->
+                    <div class="headers-checklist">
+                        <h4><i class="fas fa-list-check"></i> Security Headers</h4>
+                        <div id="headersChecklistBody"></div>
+                    </div>
+
+                    <!-- Score Adjustment -->
+                    <div class="score-adjustment-card">
+                        <h4><i class="fas fa-sliders"></i> Score Adjustment</h4>
+                        <div class="score-flow" id="scoreFlow"></div>
+                        <div class="adjustment-lists" id="adjustmentLists"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HISTORY VIEW -->
+        <div id="history-view" class="view-section hidden-view">
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-clock-rotate-left"></i> Scan History
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>URL</th>
+                                <th>Verdict</th>
+                                <th>Confidence</th>
+                                <th>Source</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- INTELLIGENCE VIEW -->
+        <div id="intelligence-view" class="view-section hidden-view">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-chart-pie"></i> Threat Intelligence</div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Scans</div>
+                        <div class="stat-value" id="statsTotal">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Phishing Detected</div>
+                        <div class="stat-value" id="statsPhishing" style="color: var(--danger-color)">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Safe URLs</div>
+                        <div class="stat-value" id="statsSafe" style="color: var(--success-color)">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Whitelisted</div>
+                        <div class="stat-value" id="statsWhitelisted" style="color: var(--accent-color)">0</div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                    <i class="fas fa-brain" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                    <p style="font-size: 0.9rem;">Advanced analytics and domain breakdown coming soon.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS VIEW -->
+        <div id="settings-view" class="view-section hidden-view">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-sliders"></i> Application Settings</div>
+
+                <div class="settings-group">
+                    <h3>Appearance</h3>
+                    <div class="toggle-switch" id="themeToggleRow">
+                        <button class="theme-toggle active" id="themeToggle">
+                            <span class="toggle-knob">🌙</span>
+                        </button>
+                        <span id="themeLabel">Dark Mode</span>
+                    </div>
+                </div>
+
+                <div class="settings-group" style="border: none;">
+                    <h3>About</h3>
+                    <p style="color: var(--text-secondary);">PhishGuard AI v1.1.0</p>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem;">Powered by <strong
+                            style="color: var(--accent-color);">SecurityScience</strong></p>
+                    <div class="ai-disclaimer" style="margin-top: 1rem;">
+                        <i class="fas fa-triangle-exclamation"></i>
+                        <span>This tool uses AI/ML models for phishing detection. Results are not guaranteed to be 100%
+                            accurate. Always use your own judgement when visiting unfamiliar websites.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const navItems = document.querySelectorAll('.nav-item');
+        const views = document.querySelectorAll('.view-section');
+        const scanBtn = document.getElementById('scanBtn');
+        const urlInput = document.getElementById('urlInput');
+        const resultBox = document.getElementById('resultBox');
+        const errorBox = document.getElementById('errorBox');
+        const themeToggle = document.getElementById('themeToggle');
+        const detailsBtn = document.getElementById('detailsBtn');
+        const featurePanel = document.getElementById('featurePanel');
+        const detailsChevron = document.getElementById('detailsChevron');
+
+        const API_URL = 'http://localhost:8000';
+
+        const featureMap = {
+            'UrlLength': 'URL Length',
+            'NumDots': 'Dot Count',
+            'NumDash': 'Dash Count',
+            'NumDashInHostname': 'Dashes in Hostname',
+            'NumPercent': 'Percent Signs',
+            'NumQueryComponents': 'Query Parameters',
+            'NumAmpersand': 'Ampersands',
+            'NumHash': 'Hash Symbols',
+            'NumNumericChars': 'Numeric Characters',
+            'NumUnderscore': 'Underscores',
+            'IpAddress': 'IP Address Used',
+            'NoHttps': 'No HTTPS',
+            'HostnameLength': 'Hostname Length',
+            'PathLength': 'Path Length',
+            'PathLevel': 'Path Depth',
+            'QueryLength': 'Query Length',
+            'SubdomainLevel': 'Subdomain Depth',
+            'AtSymbol': '@ Symbol Present',
+            'TildeSymbol': '~ Symbol Present',
+            'HttpsInHostname': 'HTTPS in Hostname',
+            'DoubleSlashInPath': 'Double Slash in Path',
+            'RandomString': 'Random String Detected',
+            'EmbeddedBrandName': 'Brand Name Embedded',
+            'DomainInSubdomains': 'Domain in Subdomains',
+            'DomainInPaths': 'Domain in Paths',
+            'NumSensitiveWords': 'Sensitive Words',
+            'MissingTitle': 'Missing Title',
+            'AbnormalFormAction': 'Abnormal Form Action',
+            'RelativeFormAction': 'Relative Form Action',
+            'ExtFormAction': 'External Form Action',
+            'InsecureForms': 'Insecure Forms',
+            'SubmitInfoToEmail': 'Submits to Email',
+            'IframeOrFrame': 'Hidden iframe',
+            'PctExtHyperlinks': 'External Links %',
+            'PctNullSelfRedirectHyperlinks': 'Null/Self Links %',
+            'PctExtResourceUrls': 'External Resources %',
+            'ExtFavicon': 'External Favicon',
+            'RightClickDisabled': 'Right-Click Disabled',
+            'PopUpWindow': 'Popup Window',
+            'FakeLinkInStatusBar': 'Fake Status Bar',
+            'FrequentDomainNameMismatch': 'Domain Mismatch',
+            'ImagesOnlyInForm': 'Image-Only Form',
+            'AbnormalExtFormActionR': 'Abnormal Action (RT)',
+            'ExtMetaScriptLinkRT': 'Ext Scripts (RT)',
+            'PctExtNullSelfRedirectHyperlinksRT': 'Null Links (RT)',
+            'PctExtResourceUrlsRT': 'Ext Resources (RT)',
+            'SubdomainLevelRT': 'Subdomain (RT)',
+            'UrlLengthRT': 'URL Length (RT)',
+            // SSL/TLS & Protocol Security Features
+            'SSLValid': 'SSL Certificate Valid',
+            'SSLSelfSigned': 'Self-Signed Certificate',
+            'SSLExpiringSoon': 'Certificate Expiring Soon',
+            'SSLExpired': 'Certificate Expired',
+            'SSLDomainMismatch': 'SSL Domain Mismatch',
+            'SSLCertAgeDays': 'Certificate Age (days)',
+            'HasHSTS': 'HSTS Header',
+            'HasCSP': 'Content Security Policy',
+            'HasXFrameOptions': 'X-Frame-Options',
+            'HttpToHttpsRedirect': 'HTTP→HTTPS Redirect',
+            'MixedContent': 'Mixed Content',
+            'TLSVersion': 'TLS Version',
+            'SecurityHeadersScore': 'Security Headers Score',
+        };
+
+        // === Theme ===
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('phishguard-theme', theme);
+            const toggle = document.getElementById('themeToggle');
+            const label = document.getElementById('themeLabel');
+            if (theme === 'dark') {
+                toggle.classList.add('active');
+                toggle.querySelector('.toggle-knob').textContent = '🌙';
+                label.textContent = 'Dark Mode';
+            } else {
+                toggle.classList.remove('active');
+                toggle.querySelector('.toggle-knob').textContent = '☀️';
+                label.textContent = 'Light Mode';
+            }
+        }
+        setTheme(localStorage.getItem('phishguard-theme') || 'dark');
+        themeToggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            setTheme(current === 'dark' ? 'light' : 'dark');
+        });
+
+        // === Navigation ===
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                navItems.forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+                views.forEach(view => view.classList.add('hidden-view'));
+                document.getElementById(item.getAttribute('data-target')).classList.remove('hidden-view');
+                if (item.getAttribute('data-target') === 'history-view') refreshHistory();
+                if (item.getAttribute('data-target') === 'intelligence-view') refreshStats();
+            });
+        });
+
+        // === Enter key ===
+        urlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') scanBtn.click(); });
+
+        // === Details toggle ===
+        let detailsOpen = false;
+        detailsBtn.addEventListener('click', () => {
+            detailsOpen = !detailsOpen;
+            featurePanel.classList.toggle('open', detailsOpen);
+            detailsChevron.style.transform = detailsOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+        });
+
+        // === Scanner ===
+        scanBtn.addEventListener('click', async () => {
+            const url = urlInput.value.trim();
+            if (!url) return;
+
+            scanBtn.querySelector('.btn-text').textContent = 'Scanning...';
+            scanBtn.disabled = true;
+            resultBox.style.display = 'none';
+            document.getElementById('securityAnalysis').style.display = 'none';
+            document.getElementById('existenceCard').style.display = 'none';
+            errorBox.style.display = 'none';
+            featurePanel.classList.remove('open');
+            detailsOpen = false;
+            detailsChevron.style.transform = 'rotate(0deg)';
+
+            try {
+                const response = await fetch(`${API_URL}/scan`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => null);
+                    throw new Error(errData?.detail || `API Error (${response.status})`);
+                }
+                renderResult(await response.json());
+            } catch (error) {
+                errorBox.style.display = 'flex';
+                errorBox.innerHTML = `<i class="fas fa-exclamation-triangle"></i> <span>${error.message || 'Scan failed. Ensure backend is running.'}</span>`;
+            } finally {
+                scanBtn.querySelector('.btn-text').textContent = 'Scan';
+                scanBtn.disabled = false;
+            }
+        });
+
+        function renderExistenceStatus(data) {
+            const card = document.getElementById('existenceCard');
+            card.style.display = 'block';
+
+            const icon = document.getElementById('existenceIcon');
+            const title = document.getElementById('existenceTitle');
+            const subtitle = document.getElementById('existenceSubtitle');
+            const badge = document.getElementById('existenceBadge');
+
+            const ex = data.existence_details;
+            if (!ex) {
+                card.style.display = 'none';
+                return;
+            }
+
+            if (ex.exists) {
+                icon.className = 'existence-icon existence-online';
+                icon.innerHTML = '<i class="fas fa-circle-check"></i>';
+                title.textContent = 'Website is Online';
+                subtitle.textContent = ex.response_time_ms > 0 ? `Responded in ${ex.response_time_ms}ms` : 'Server is reachable';
+                badge.textContent = 'ONLINE';
+                badge.className = 'existence-badge badge-online';
+            } else if (ex.dns_resolves && !ex.is_reachable) {
+                icon.className = 'existence-icon existence-warning';
+                icon.innerHTML = '<i class="fas fa-triangle-exclamation"></i>';
+                title.textContent = 'Website is Unreachable';
+                subtitle.textContent = ex.error || 'DNS resolves but server is not responding';
+                badge.textContent = 'UNREACHABLE';
+                badge.className = 'existence-badge badge-warning';
+            } else {
+                icon.className = 'existence-icon existence-offline';
+                icon.innerHTML = '<i class="fas fa-circle-xmark"></i>';
+                title.textContent = 'Website Does Not Exist';
+                subtitle.textContent = ex.error || 'Domain could not be resolved';
+                badge.textContent = 'NOT FOUND';
+                badge.className = 'existence-badge badge-offline';
+            }
+
+            // DNS
+            const dnsEl = document.getElementById('existDNS');
+            dnsEl.textContent = ex.dns_resolves ? '✓ Resolves' : '✗ Failed';
+            dnsEl.style.color = ex.dns_resolves ? 'var(--success-color)' : 'var(--danger-color)';
+
+            // HTTP
+            const httpEl = document.getElementById('existHTTP');
+            httpEl.textContent = ex.is_reachable ? '✓ Reachable' : '✗ Unreachable';
+            httpEl.style.color = ex.is_reachable ? 'var(--success-color)' : 'var(--danger-color)';
+
+            // Status Code
+            const statusEl = document.getElementById('existStatus');
+            if (ex.status_code > 0) {
+                statusEl.textContent = ex.status_code;
+                statusEl.style.color = ex.status_code < 400 ? 'var(--success-color)' : 'var(--warning-color)';
+            } else {
+                statusEl.textContent = 'N/A';
+                statusEl.style.color = 'var(--text-secondary)';
+            }
+
+            // Response Time
+            const timeEl = document.getElementById('existTime');
+            if (ex.response_time_ms > 0) {
+                timeEl.textContent = `${ex.response_time_ms}ms`;
+                timeEl.style.color = ex.response_time_ms < 1000 ? 'var(--success-color)' : 'var(--warning-color)';
+            } else {
+                timeEl.textContent = 'N/A';
+                timeEl.style.color = 'var(--text-secondary)';
+            }
+
+            // IP
+            const ipEl = document.getElementById('existIP');
+            ipEl.textContent = ex.ip_address || 'N/A';
+            ipEl.style.color = ex.ip_address ? 'var(--text-primary)' : 'var(--text-secondary)';
+        }
+
+        function renderResult(data) {
+            // Render existence status first
+            if (data.existence_details) {
+                renderExistenceStatus(data);
+            }
+            resultBox.style.display = 'block';
+
+            const badge = document.getElementById('statusBadge');
+            const whitelistBadge = document.getElementById('whitelistBadge');
+            const ringFill = document.getElementById('ringFill');
+            const ringText = document.getElementById('ringText');
+            const scannedUrl = document.getElementById('scannedUrl');
+            const featureList = document.getElementById('featureList');
+
+            const pct = Math.round(data.confidence * 100);
+            ringText.textContent = `${pct}%`;
+            scannedUrl.textContent = data.url;
+
+            // Animate ring
+            const circumference = 2 * Math.PI * 34;
+            ringFill.style.strokeDasharray = circumference;
+            ringFill.style.strokeDashoffset = circumference;
+            setTimeout(() => {
+                ringFill.style.strokeDashoffset = circumference - (pct / 100) * circumference;
+            }, 50);
+
+            whitelistBadge.style.display = data.whitelisted ? 'inline-flex' : 'none';
+
+            if (data.is_phishing) {
+                badge.innerHTML = '<i class="fas fa-skull-crossbones"></i> PHISHING DETECTED';
+                badge.className = 'status-badge status-danger';
+                ringFill.style.stroke = 'var(--danger-color)';
+                document.querySelector('.confidence-ring').classList.add('danger');
+                document.querySelector('.confidence-ring').classList.remove('safe');
+            } else {
+                badge.innerHTML = '<i class="fas fa-check-circle"></i> LEGITIMATE / SAFE';
+                badge.className = 'status-badge status-safe';
+                ringFill.style.stroke = 'var(--success-color)';
+                document.querySelector('.confidence-ring').classList.add('safe');
+                document.querySelector('.confidence-ring').classList.remove('danger');
+            }
+
+            // Render ALL features
+            featureList.innerHTML = '';
+            for (const [key, value] of Object.entries(data.features)) {
+                const label = featureMap[key] || key;
+                const div = document.createElement('div');
+                div.className = 'feature-item';
+                const numVal = parseFloat(value);
+                let valClass = 'feature-value';
+                if (numVal === 1) valClass += ' val-warn';
+                else if (numVal > 1) valClass += ' val-high';
+                div.innerHTML = `<span class="feature-label">${label}</span><span class="${valClass}">${value}</span>`;
+                featureList.appendChild(div);
+            }
+
+            // --- Render Security Analysis ---
+            if (data.security_details) {
+                renderSecurityAnalysis(data.security_details);
+            }
+        }
+
+        function renderSecurityAnalysis(sec) {
+            const panel = document.getElementById('securityAnalysis');
+            panel.style.display = 'block';
+
+            // --- SSL Certificate Status ---
+            const sslIcon = document.getElementById('sslIcon');
+            const sslTitle = document.getElementById('sslTitle');
+            const sslSubtitle = document.getElementById('sslSubtitle');
+
+            if (sec.ssl_valid) {
+                sslIcon.className = 'ssl-icon ssl-valid';
+                sslIcon.innerHTML = '<i class="fas fa-lock"></i>';
+                sslTitle.textContent = 'Valid SSL Certificate';
+                sslSubtitle.textContent = 'Connection is encrypted and verified';
+            } else if (sec.ssl_self_signed) {
+                sslIcon.className = 'ssl-icon ssl-warning';
+                sslIcon.innerHTML = '<i class="fas fa-triangle-exclamation"></i>';
+                sslTitle.textContent = 'Self-Signed Certificate';
+                sslSubtitle.textContent = 'Certificate is not from a trusted authority';
+            } else if (sec.ssl_issuer !== 'N/A') {
+                sslIcon.className = 'ssl-icon ssl-warning';
+                sslIcon.innerHTML = '<i class="fas fa-lock-open"></i>';
+                sslTitle.textContent = 'Certificate Issues Detected';
+                sslSubtitle.textContent = 'SSL certificate has validation problems';
+            } else {
+                sslIcon.className = 'ssl-icon ssl-invalid';
+                sslIcon.innerHTML = '<i class="fas fa-unlock"></i>';
+                sslTitle.textContent = 'No SSL Certificate';
+                sslSubtitle.textContent = 'Connection is not encrypted';
+            }
+
+            // SSL details
+            document.getElementById('sslIssuer').textContent = sec.ssl_issuer || 'N/A';
+
+            const expiryDays = sec.ssl_expires_in_days;
+            const expiryEl = document.getElementById('sslExpiry');
+            if (expiryDays > 0) {
+                expiryEl.textContent = `${expiryDays} days`;
+                expiryEl.style.color = expiryDays < 30 ? 'var(--warning-color)' : 'var(--success-color)';
+            } else if (expiryDays === -1 && !sec.ssl_valid) {
+                expiryEl.textContent = 'N/A';
+                expiryEl.style.color = 'var(--text-secondary)';
+            } else {
+                expiryEl.textContent = 'EXPIRED';
+                expiryEl.style.color = 'var(--danger-color)';
+            }
+
+            const domainEl = document.getElementById('sslDomainMatch');
+            domainEl.textContent = sec.ssl_domain_match ? '✓ Match' : '✗ Mismatch';
+            domainEl.style.color = sec.ssl_domain_match ? 'var(--success-color)' : 'var(--danger-color)';
+
+            // TLS Version badge
+            const tlsEl = document.getElementById('sslTLS');
+            const tlsVer = sec.tls_version || 'None';
+            let tlsClass = 'tls-bad';
+            if (tlsVer.includes('1.3')) tlsClass = 'tls-good';
+            else if (tlsVer.includes('1.2')) tlsClass = 'tls-good';
+            else if (tlsVer.includes('1.1') || tlsVer.includes('1.0')) tlsClass = 'tls-ok';
+            tlsEl.innerHTML = `<span class="tls-badge ${tlsClass}">${tlsVer}</span>`;
+
+            // --- Security Headers Checklist ---
+            const headersBody = document.getElementById('headersChecklistBody');
+            const headers = [
+                { key: 'has_hsts', label: 'Strict-Transport-Security (HSTS)' },
+                { key: 'has_csp', label: 'Content-Security-Policy' },
+                { key: 'has_x_frame_options', label: 'X-Frame-Options' },
+                { key: 'http_to_https_redirect', label: 'HTTP → HTTPS Redirect' },
+            ];
+
+            headersBody.innerHTML = headers.map(h => {
+                const present = sec[h.key];
+                const icon = present ? 'fa-circle-check check-pass' : 'fa-circle-xmark check-fail';
+                const labelClass = present ? 'check-label-pass' : '';
+                return `<div class="header-check-item">
+                    <i class="fas ${icon}"></i>
+                    <span class="${labelClass}">${h.label}</span>
+                </div>`;
+            }).join('');
+
+            // Add mixed content check
+            const mixedIcon = sec.mixed_content ? 'fa-circle-xmark check-fail' : 'fa-circle-check check-pass';
+            const mixedLabel = sec.mixed_content ? '' : 'check-label-pass';
+            headersBody.innerHTML += `<div class="header-check-item">
+                <i class="fas ${mixedIcon}"></i>
+                <span class="${mixedLabel}">No Mixed Content${sec.mixed_content ? ' ✗ (HTTP resources on HTTPS)' : ''}</span>
+            </div>`;
+
+            // --- Score Adjustment ---
+            const scoreFlow = document.getElementById('scoreFlow');
+            const mlPct = Math.round(sec.original_ml_score * 100);
+            const adjPct = Math.round(sec.adjusted_score * 100);
+            const adjVal = sec.score_adjustment;
+            const adjSign = adjVal >= 0 ? '+' : '';
+            const adjColor = adjVal > 0 ? 'var(--danger-color)' : adjVal < 0 ? 'var(--success-color)' : 'var(--text-secondary)';
+
+            scoreFlow.innerHTML = `
+                <div class="score-box">
+                    <div class="score-label">ML Score</div>
+                    <div class="score-val" style="color: var(--text-primary)">${mlPct}%</div>
+                </div>
+                <span class="score-arrow"><i class="fas fa-plus"></i></span>
+                <div class="score-box">
+                    <div class="score-label">Adjustment</div>
+                    <div class="score-val" style="color: ${adjColor}">${adjSign}${Math.round(adjVal * 100)}%</div>
+                </div>
+                <span class="score-arrow"><i class="fas fa-equals"></i></span>
+                <div class="score-box">
+                    <div class="score-label">Final Score</div>
+                    <div class="score-val" style="color: ${adjPct > 50 ? 'var(--danger-color)' : 'var(--success-color)'}">${adjPct}%</div>
+                </div>
+            `;
+
+            // Penalties & Bonuses lists
+            const adjLists = document.getElementById('adjustmentLists');
+            const penalties = (sec.penalties || []).map(p =>
+                `<div class="adj-item penalty"><span class="adj-desc">${p.description}</span><span class="adj-weight">+${Math.round(p.weight * 100)}%</span></div>`
+            ).join('') || '<div class="adj-empty">No penalties applied</div>';
+
+            const bonuses = (sec.bonuses || []).map(b =>
+                `<div class="adj-item bonus"><span class="adj-desc">${b.description}</span><span class="adj-weight">-${Math.round(b.weight * 100)}%</span></div>`
+            ).join('') || '<div class="adj-empty">No bonuses applied</div>';
+
+            adjLists.innerHTML = `
+                <div class="adj-list penalties">
+                    <h5><i class="fas fa-arrow-up"></i> Penalties</h5>
+                    ${penalties}
+                </div>
+                <div class="adj-list bonuses">
+                    <h5><i class="fas fa-arrow-down"></i> Bonuses</h5>
+                    ${bonuses}
+                </div>
+            `;
+        }
+
+        // === History ===
+        async function refreshHistory() {
+            try {
+                const res = await fetch(`${API_URL}/history`);
+                const data = await res.json();
+                const tbody = document.getElementById('historyTableBody');
+                tbody.innerHTML = '';
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-secondary); padding: 2rem;">No scans yet.</td></tr>';
+                    return;
+                }
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    const date = new Date(item.timestamp).toLocaleString();
+                    const cls = item.is_phishing ? 'status-danger' : 'status-safe';
+                    const icon = item.is_phishing ? '<i class="fas fa-skull-crossbones"></i>' : '<i class="fas fa-check-circle"></i>';
+                    const txt = item.is_phishing ? 'PHISHING' : 'SAFE';
+                    const src = item.whitelisted
+                        ? '<span class="status-badge status-whitelisted" style="margin:0;font-size:0.7rem"><i class="fas fa-list-check"></i> Whitelist</span>'
+                        : '<span style="font-size:0.8rem;color:var(--text-secondary)"><i class="fas fa-robot"></i> ML Model</span>';
+                    row.innerHTML = `
+                        <td class="history-url" title="${item.url}">${item.url}</td>
+                        <td><span class="status-badge ${cls}" style="margin:0;font-size:0.7rem">${icon} ${txt}</span></td>
+                        <td style="font-variant-numeric:tabular-nums">${(item.confidence * 100).toFixed(1)}%</td>
+                        <td>${src}</td>
+                        <td style="font-size:0.82rem;color:var(--text-secondary)">${date}</td>`;
+                    tbody.appendChild(row);
+                });
+            } catch (e) { console.error("History error", e); }
+        }
+
+        // === Stats ===
+        async function refreshStats() {
+            try {
+                const res = await fetch(`${API_URL}/stats`);
+                const data = await res.json();
+                document.getElementById('statsTotal').textContent = data.total_scans;
+                document.getElementById('statsPhishing').textContent = data.phishing_detected;
+                document.getElementById('statsSafe').textContent = data.safe_urls;
+                document.getElementById('statsWhitelisted').textContent = data.whitelisted_count;
+            } catch (e) { console.error("Stats error", e); }
+        }
+    </script>
+</body>
+
+</html>
